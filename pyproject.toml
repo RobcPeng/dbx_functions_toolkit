@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "dbx_toolkit"
+version = "0.1.0"
+description = "Reusable PySpark utility library for Databricks POCs"
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+include = ["dbx_toolkit*"]
