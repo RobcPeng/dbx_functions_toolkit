@@ -391,8 +391,8 @@ class TestRemoveOutliers:
         assert result.count() == 5
 
     def test_zscore_removes_extreme_outlier(self, spark):
-        # Mean ~5, stddev ~1.5 for 1-9; 10000 is far beyond z=3
-        normal = [float(i) for i in range(1, 10)]
+        # 50 values near 5.0, then one extreme outlier — ensures z-score >> 3
+        normal = [5.0] * 50
         df = self._make_df(spark, normal + [10000.0])
         result = remove_outliers(df, column="val", method="zscore", z_threshold=3.0)
         vals = [r["val"] for r in result.collect()]
