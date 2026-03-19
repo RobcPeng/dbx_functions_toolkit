@@ -165,16 +165,19 @@ def profile_table(
         col_mean  = float(agg_result["col_mean"])   if col_name in numeric_cols and agg_result["col_mean"]   is not None else None
         col_std   = float(agg_result["col_stddev"]) if col_name in numeric_cols and agg_result["col_stddev"] is not None else None
 
-        # Sample up to 5 distinct non-null values
-        sample_vals = (
-            working_df
-            .select(col_expr.cast(T.StringType()).alias("v"))
-            .filter(F.col("v").isNotNull())
-            .dropDuplicates(["v"])
-            .limit(5)
-            .agg(F.concat_ws(", ", F.collect_list("v")).alias("samples"))
-            .collect()[0]["samples"]
-        )
+        # Sample up to 5 distinct non-null values (skip complex types)
+        if is_orderable:
+            sample_vals = (
+                working_df
+                .select(col_expr.cast(T.StringType()).alias("v"))
+                .filter(F.col("v").isNotNull())
+                .dropDuplicates(["v"])
+                .limit(5)
+                .agg(F.concat_ws(", ", F.collect_list("v")).alias("samples"))
+                .collect()[0]["samples"]
+            )
+        else:
+            sample_vals = None
 
         rows.append((
             col_name,
@@ -527,10 +530,13 @@ def correlation_matrix(
     rows = []
     for i, col_a in enumerate(target_cols):
         for col_b in target_cols[i + 1:]:
-            corr_val = cast_df.stat.corr(col_a, col_b, method="pearson")
-            if corr_val is not None and not math.isnan(corr_val):
-                rows.append((col_a, col_b, float(corr_val)))
-            else:
+            try:
+                corr_val = cast_df.stat.corr(col_a, col_b, method="pearson")
+                if corr_val is not None and not math.isnan(corr_val):
+                    rows.append((col_a, col_b, float(corr_val)))
+                else:
+                    rows.append((col_a, col_b, None))
+            except Exception:
                 rows.append((col_a, col_b, None))
 
     return spark.createDataFrame(rows, schema).orderBy(

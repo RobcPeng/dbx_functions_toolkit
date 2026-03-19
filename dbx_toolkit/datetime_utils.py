@@ -56,8 +56,10 @@ def parse_dates(
     if output_col is None:
         output_col = column
 
-    parse_exprs = [F.expr(f"try_to_date(`{column}`, '{fmt}')") for fmt in formats]
-    parsed = F.coalesce(*parse_exprs)
+    # Use try_to_date to return null on parse failure (ANSI-safe)
+    # Build as a single SQL coalesce expression to avoid Spark Connect issues
+    try_exprs = ", ".join([f"try_to_date(`{column}`, '{fmt}')" for fmt in formats])
+    parsed = F.expr(f"coalesce({try_exprs})")
     return df.withColumn(output_col, parsed)
 
 
