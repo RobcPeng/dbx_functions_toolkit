@@ -17,12 +17,13 @@ A reusable PySpark utility library for Databricks POCs. Sync it via Git folder, 
    /Workspace/Users/<your_username>/dbx_toolkit
    ```
 
-5. In any notebook, paste the path into `sys.path.insert` as the first cell, then import:
+5. In any notebook, paste the path into the `GIT_FOLDER` variable as the first cell, then import:
 
 ```python
 # Cell 1 — Add the Git folder to the Python path
 import sys
-sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")  # paste your full path here
+GIT_FOLDER = "/Workspace/Users/<your_username>/dbx_toolkit"  # paste your full path here
+sys.path.insert(0, GIT_FOLDER)
 ```
 
 ```python
@@ -164,14 +165,15 @@ python -m pytest tests/ -v
 **In Databricks** — run all tests from a notebook cell:
 
 ```python
-import os, sys
-os.environ["PYTHONDONTWRITEBYTECODE"] = "1"  # prevents __pycache__ errors on Workspace filesystem
+import sys
+sys.dont_write_bytecode = True  # prevents __pycache__ errors on Workspace filesystem
 
-sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
+GIT_FOLDER = "/Workspace/Users/<your_username>/dbx_toolkit"  # paste your full path here
+sys.path.insert(0, GIT_FOLDER)
 
 import pytest
 pytest.main([
-    "/Workspace/Users/<your_username>/dbx_toolkit/tests/",
+    f"{GIT_FOLDER}/tests/",
     "-v", "--tb=short", "-p", "no:cacheprovider"
 ])
 ```
@@ -179,19 +181,20 @@ pytest.main([
 Run a specific test file:
 
 ```python
-import os, sys
-os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+import sys
+sys.dont_write_bytecode = True
 
-sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
+GIT_FOLDER = "/Workspace/Users/<your_username>/dbx_toolkit"  # paste your full path here
+sys.path.insert(0, GIT_FOLDER)
 
 import pytest
 pytest.main([
-    "/Workspace/Users/<your_username>/dbx_toolkit/tests/test_data_profiling.py",
+    f"{GIT_FOLDER}/tests/test_data_profiling.py",
     "-v", "-p", "no:cacheprovider"
 ])
 ```
 
-> **Note:** Tests run in-process (not via `subprocess`) to reuse the existing Databricks SparkSession. `PYTHONDONTWRITEBYTECODE=1` prevents `__pycache__` writes that the Workspace filesystem doesn't support.
+> **Note:** Tests run in-process (not via `subprocess`) to reuse the existing Databricks SparkSession. `sys.dont_write_bytecode = True` prevents `__pycache__` writes that the Workspace filesystem doesn't support.
 
 For Delta/Unity Catalog tests (`merge_into`, `scd_type2`, `backup_table`, etc.), run directly in a notebook against a test catalog.
 
