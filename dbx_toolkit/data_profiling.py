@@ -138,12 +138,12 @@ def profile_table(
         agg_exprs = [
             F.count(col_expr).alias("non_null_count"),
             F.count(F.when(col_expr.isNull(), 1)).alias("null_count"),
-            F.countDistinct(col_expr).alias("distinct_count"),
         ]
 
-        # min/max only work on orderable types (not MAP, ARRAY, STRUCT)
+        # countDistinct and min/max only work on orderable types (not MAP, ARRAY, STRUCT)
         if is_orderable:
             agg_exprs += [
+                F.countDistinct(col_expr).alias("distinct_count"),
                 F.min(col_expr).cast(T.StringType()).alias("col_min"),
                 F.max(col_expr).cast(T.StringType()).alias("col_max"),
             ]
@@ -159,7 +159,7 @@ def profile_table(
         non_null  = agg_result["non_null_count"]
         null_cnt  = agg_result["null_count"]
         null_pct  = round(null_cnt / total_rows * 100, 4) if total_rows > 0 else 0.0
-        distinct  = agg_result["distinct_count"]
+        distinct  = agg_result["distinct_count"] if is_orderable else None
         col_min   = agg_result["col_min"] if is_orderable else None
         col_max   = agg_result["col_max"] if is_orderable else None
         col_mean  = float(agg_result["col_mean"])   if col_name in numeric_cols and agg_result["col_mean"]   is not None else None

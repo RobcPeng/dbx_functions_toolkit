@@ -56,7 +56,7 @@ def parse_dates(
     if output_col is None:
         output_col = column
 
-    parse_exprs = [F.to_date(F.col(column), fmt) for fmt in formats]
+    parse_exprs = [F.expr(f"try_to_date(`{column}`, '{fmt}')") for fmt in formats]
     parsed = F.coalesce(*parse_exprs)
     return df.withColumn(output_col, parsed)
 

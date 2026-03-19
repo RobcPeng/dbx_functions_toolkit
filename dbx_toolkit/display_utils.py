@@ -155,13 +155,15 @@ def summary_table(df: DataFrame) -> DataFrame:
 
         distinct_count = df.agg(F.approx_count_distinct(col_name)).collect()[0][0]
 
-        sample_vals = (
-            df.filter(F.col(col_name).isNotNull())
-            .select(col_name)
-            .limit(3)
-            .rdd.flatMap(lambda r: [str(r[0])])
-            .collect()
-        )
+        sample_vals = [
+            str(row[0])
+            for row in (
+                df.filter(F.col(col_name).isNotNull())
+                .select(col_name)
+                .limit(3)
+                .collect()
+            )
+        ]
         sample_str = ", ".join(sample_vals)
 
         rows.append((col_name, dtype, nullable, null_count, null_pct, distinct_count, sample_str))

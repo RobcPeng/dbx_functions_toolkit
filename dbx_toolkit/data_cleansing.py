@@ -696,7 +696,7 @@ def enforce_types(
     for col_name, target_type in type_map.items():
         if col_name not in df.columns:
             continue
-        result = result.withColumn(col_name, F.col(col_name).cast(target_type))
+        result = result.withColumn(col_name, F.expr(f"try_cast(`{col_name}` as {target_type})"))
     return result
 
 
