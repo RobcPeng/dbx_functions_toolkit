@@ -14,7 +14,7 @@ A reusable PySpark utility library for Databricks POCs. Sync it via Git folder, 
 
 4. In the Databricks sidebar, right-click your Git folder and select **Copy path**. It will look something like:
    ```
-   /Workspace/Users/yourname@example.com/dbx_functions_toolkit
+   /Workspace/Users/<your_username>/dbx_toolkit
    ```
 
 5. In any notebook, paste the path into `sys.path.insert` as the first cell, then import:
@@ -22,7 +22,7 @@ A reusable PySpark utility library for Databricks POCs. Sync it via Git folder, 
 ```python
 # Cell 1 — Add the Git folder to the Python path
 import sys
-sys.path.insert(0, "/Workspace/Users/yourname@example.com/dbx_functions_toolkit")  # paste your full path here
+sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")  # paste your full path here
 ```
 
 ```python
@@ -167,7 +167,7 @@ python -m pytest tests/ -v
 import subprocess
 result = subprocess.run(
     ["python", "-m", "pytest",
-     "/Workspace/Users/robertjustinianpeng@gmail.com/dbx_functions_toolkit/tests/",
+     "/Workspace/Users/<your_username>/dbx_toolkit/tests/",
      "-v", "--tb=short"],
     capture_output=True, text=True
 )
@@ -181,7 +181,7 @@ Run a specific test file:
 import subprocess
 result = subprocess.run(
     ["python", "-m", "pytest",
-     "/Workspace/Users/robertjustinianpeng@gmail.com/dbx_functions_toolkit/tests/test_data_profiling.py",
+     "/Workspace/Users/<your_username>/dbx_toolkit/tests/test_data_profiling.py",
      "-v"],
     capture_output=True, text=True
 )

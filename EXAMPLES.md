@@ -4,7 +4,7 @@ All examples assume this setup:
 
 ```python
 import sys
-sys.path.insert(0, "/Workspace/Users/yourname@example.com/dbx_functions_toolkit")
+sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
 
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.getOrCreate()
