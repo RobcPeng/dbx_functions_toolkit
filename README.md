@@ -164,30 +164,34 @@ python -m pytest tests/ -v
 **In Databricks** — run all tests from a notebook cell:
 
 ```python
-import pytest
-import sys
+import os, sys
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"  # prevents __pycache__ errors on Workspace filesystem
 
 sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
-sys.exit(pytest.main([
+
+import pytest
+pytest.main([
     "/Workspace/Users/<your_username>/dbx_toolkit/tests/",
     "-v", "--tb=short", "-p", "no:cacheprovider"
-]))
+])
 ```
 
 Run a specific test file:
 
 ```python
-import pytest
-import sys
+import os, sys
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
+
+import pytest
 pytest.main([
     "/Workspace/Users/<your_username>/dbx_toolkit/tests/test_data_profiling.py",
     "-v", "-p", "no:cacheprovider"
 ])
 ```
 
-> **Note:** Tests must run in-process (not via `subprocess`) so they can reuse the existing Databricks SparkSession. A subprocess would try to create a new SparkSession, which conflicts with the Databricks runtime.
+> **Note:** Tests run in-process (not via `subprocess`) to reuse the existing Databricks SparkSession. `PYTHONDONTWRITEBYTECODE=1` prevents `__pycache__` writes that the Workspace filesystem doesn't support.
 
 For Delta/Unity Catalog tests (`merge_into`, `scd_type2`, `backup_table`, etc.), run directly in a notebook against a test catalog.
 
