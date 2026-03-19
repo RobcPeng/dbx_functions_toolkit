@@ -12,17 +12,26 @@ A reusable PySpark utility library for Databricks POCs. Sync it via Git folder, 
 
 3. Paste the repo URL and click **Create Git folder**.
 
-4. In any notebook, import directly — Git folders are automatically on the Python path:
+4. In the Databricks sidebar, right-click your Git folder and select **Copy path**. It will look something like:
+   ```
+   /Workspace/Users/yourname@example.com/dbx_functions_toolkit
+   ```
+
+5. In any notebook, paste the path into `sys.path.insert` as the first cell, then import:
 
 ```python
-# The Git folder root is already on sys.path
+# Cell 1 — Add the Git folder to the Python path
+import sys
+sys.path.insert(0, "/Workspace/Users/yourname@example.com/dbx_functions_toolkit")  # paste your full path here
+```
+
+```python
+# Cell 2 — Import and use
 from dbx_toolkit.data_profiling import profile_table, null_report
 from dbx_toolkit.ml_utils import compare_models, classification_report
 ```
 
-5. To update, open the Git folder in Databricks and click **Pull** (or it syncs automatically if you configure auto-pull).
-
-**That's it.** No wheels, no `%pip install`, no `sys.path` hacks.
+6. To update, open the Git folder in Databricks and click **Pull** (or it syncs automatically if you configure auto-pull).
 
 ### Alternative Deployment Options
 
@@ -183,6 +192,8 @@ jobs:
 ```
 
 ## Modules
+
+For detailed examples with sample inputs and outputs for every function, see **[EXAMPLES.md](EXAMPLES.md)**.
 
 ### `data_profiling` — Understand your data fast
 

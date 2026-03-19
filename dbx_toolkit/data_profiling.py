@@ -58,6 +58,12 @@ def _numeric_columns(df: DataFrame) -> List[str]:
     ]
 
 
+def _orderable_column(field: T.StructField) -> bool:
+    """Return True if the column type supports min/max ordering."""
+    non_orderable = (T.MapType, T.ArrayType, T.StructType)
+    return not isinstance(field.dataType, non_orderable)
+
+
 def _safe_sample(df: DataFrame, sample_size: Optional[int]) -> DataFrame:
     """Return a sampled DataFrame if sample_size is provided, otherwise the original."""
     if sample_size is None:
@@ -127,13 +133,20 @@ def profile_table(
         dtype_str = field.dataType.simpleString()
         col_expr = F.col(f"`{col_name}`")
 
+        is_orderable = _orderable_column(field)
+
         agg_exprs = [
             F.count(col_expr).alias("non_null_count"),
             F.count(F.when(col_expr.isNull(), 1)).alias("null_count"),
             F.countDistinct(col_expr).alias("distinct_count"),
-            F.min(col_expr).cast(T.StringType()).alias("col_min"),
-            F.max(col_expr).cast(T.StringType()).alias("col_max"),
         ]
+
+        # min/max only work on orderable types (not MAP, ARRAY, STRUCT)
+        if is_orderable:
+            agg_exprs += [
+                F.min(col_expr).cast(T.StringType()).alias("col_min"),
+                F.max(col_expr).cast(T.StringType()).alias("col_max"),
+            ]
 
         if col_name in numeric_cols:
             agg_exprs += [
@@ -147,8 +160,8 @@ def profile_table(
         null_cnt  = agg_result["null_count"]
         null_pct  = round(null_cnt / total_rows * 100, 4) if total_rows > 0 else 0.0
         distinct  = agg_result["distinct_count"]
-        col_min   = agg_result["col_min"]
-        col_max   = agg_result["col_max"]
+        col_min   = agg_result["col_min"] if is_orderable else None
+        col_max   = agg_result["col_max"] if is_orderable else None
         col_mean  = float(agg_result["col_mean"])   if col_name in numeric_cols and agg_result["col_mean"]   is not None else None
         col_std   = float(agg_result["col_stddev"]) if col_name in numeric_cols and agg_result["col_stddev"] is not None else None
 
@@ -501,11 +514,24 @@ def correlation_matrix(
     if len(target_cols) < 2 or df.count() == 0:
         return spark.createDataFrame([], schema)
 
+    # Cast target columns to double to ensure corr() works correctly
+    cast_df = df.select([F.col(f"`{c}`").cast(T.DoubleType()).alias(c) for c in target_cols])
+    # Drop rows where all target cols are null
+    cast_df = cast_df.dropna(how="all", subset=target_cols)
+
+    if cast_df.count() < 2:
+        return spark.createDataFrame([], schema)
+
+    import math
+
     rows = []
     for i, col_a in enumerate(target_cols):
         for col_b in target_cols[i + 1:]:
-            corr_val = df.stat.corr(col_a, col_b, method="pearson")
-            rows.append((col_a, col_b, float(corr_val) if corr_val is not None else None))
+            corr_val = cast_df.stat.corr(col_a, col_b, method="pearson")
+            if corr_val is not None and not math.isnan(corr_val):
+                rows.append((col_a, col_b, float(corr_val)))
+            else:
+                rows.append((col_a, col_b, None))
 
     return spark.createDataFrame(rows, schema).orderBy(
         F.abs(F.col("pearson_correlation")).desc()
