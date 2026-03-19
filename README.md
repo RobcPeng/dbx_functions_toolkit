@@ -164,30 +164,30 @@ python -m pytest tests/ -v
 **In Databricks** — run all tests from a notebook cell:
 
 ```python
-import subprocess
-result = subprocess.run(
-    ["python", "-m", "pytest",
-     "/Workspace/Users/<your_username>/dbx_toolkit/tests/",
-     "-v", "--tb=short"],
-    capture_output=True, text=True
-)
-print(result.stdout)
-print(result.stderr)
+import pytest
+import sys
+
+sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
+sys.exit(pytest.main([
+    "/Workspace/Users/<your_username>/dbx_toolkit/tests/",
+    "-v", "--tb=short", "-p", "no:cacheprovider"
+]))
 ```
 
 Run a specific test file:
 
 ```python
-import subprocess
-result = subprocess.run(
-    ["python", "-m", "pytest",
-     "/Workspace/Users/<your_username>/dbx_toolkit/tests/test_data_profiling.py",
-     "-v"],
-    capture_output=True, text=True
-)
-print(result.stdout)
-print(result.stderr)
+import pytest
+import sys
+
+sys.path.insert(0, "/Workspace/Users/<your_username>/dbx_toolkit")
+pytest.main([
+    "/Workspace/Users/<your_username>/dbx_toolkit/tests/test_data_profiling.py",
+    "-v", "-p", "no:cacheprovider"
+])
 ```
+
+> **Note:** Tests must run in-process (not via `subprocess`) so they can reuse the existing Databricks SparkSession. A subprocess would try to create a new SparkSession, which conflicts with the Databricks runtime.
 
 For Delta/Unity Catalog tests (`merge_into`, `scd_type2`, `backup_table`, etc.), run directly in a notebook against a test catalog.
 
