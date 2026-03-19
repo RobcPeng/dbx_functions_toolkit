@@ -153,14 +153,43 @@ from dbx_toolkit.ml_utils import split_data, compare_models
 
 ### Testing
 
-Run tests locally before pushing:
+**Locally** (before pushing):
 
 ```bash
 cd dbx_toolkit
+pip install pyspark pytest
 python -m pytest tests/ -v
 ```
 
-For Databricks-specific tests (Delta, Unity Catalog), use a test notebook that imports from the Git folder and validates against a test catalog.
+**In Databricks** — run all tests from a notebook cell:
+
+```python
+import subprocess
+result = subprocess.run(
+    ["python", "-m", "pytest",
+     "/Workspace/Users/robertjustinianpeng@gmail.com/dbx_functions_toolkit/tests/",
+     "-v", "--tb=short"],
+    capture_output=True, text=True
+)
+print(result.stdout)
+print(result.stderr)
+```
+
+Run a specific test file:
+
+```python
+import subprocess
+result = subprocess.run(
+    ["python", "-m", "pytest",
+     "/Workspace/Users/robertjustinianpeng@gmail.com/dbx_functions_toolkit/tests/test_data_profiling.py",
+     "-v"],
+    capture_output=True, text=True
+)
+print(result.stdout)
+print(result.stderr)
+```
+
+For Delta/Unity Catalog tests (`merge_into`, `scd_type2`, `backup_table`, etc.), run directly in a notebook against a test catalog.
 
 ### CI/CD Pipeline (GitHub Actions)
 
