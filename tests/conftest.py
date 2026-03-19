@@ -6,7 +6,13 @@ from pyspark.sql import SparkSession
 
 @pytest.fixture(scope="session")
 def spark():
-    """Create a local SparkSession for testing."""
+    """Return the active SparkSession (Databricks) or create a local one."""
+    # Try to use existing session (Databricks)
+    existing = SparkSession.getActiveSession()
+    if existing is not None:
+        return existing
+
+    # Fall back to local session for local testing
     return (
         SparkSession.builder
         .master("local[2]")
